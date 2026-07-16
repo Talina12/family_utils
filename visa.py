@@ -5,9 +5,8 @@ import sys
 import datetime
 import re
 from openpyxl.utils import get_column_letter
-
-sys.stdout.reconfigure(encoding="utf-8")
-
+# next task: add list of existing categories and contragents.
+#           recognize multiple payments and refer to billing day of the document
 
 
 def date_filter_converter(value):
@@ -99,4 +98,5 @@ def main():
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")
     main()
