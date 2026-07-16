@@ -7,6 +7,7 @@ import re
 from openpyxl.utils import get_column_letter
 # next task: add list of existing categories and contragents.
 #           recognize multiple payments and refer to billing day of the document
+#           remove ענף column from result
 
 
 def date_filter_converter(value):
