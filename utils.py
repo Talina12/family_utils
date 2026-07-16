@@ -5,6 +5,7 @@ import re
 import sys
 
 import pandas as pd
+from openpyxl.utils import get_column_letter
 
 
 def resolve_files(pattern, default_directory="C:/Users/talin/Downloads"):
@@ -12,6 +13,27 @@ def resolve_files(pattern, default_directory="C:/Users/talin/Downloads"):
     print(f"Using file directory: {file_directory}")
     files = glob.glob(os.path.join(file_directory, pattern))
     return file_directory, files
+
+
+def next_available_path(path):
+    if not os.path.exists(path):
+        return path
+    root, ext = os.path.splitext(path)
+    n = 1
+    while os.path.exists(f"{root}({n}){ext}"):
+        n += 1
+    return f"{root}({n}){ext}"
+
+
+def write_dated_excel(result_data_frame, output_path, date_col):
+    with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
+        result_data_frame.to_excel(writer, index=False)
+        date_col_index = result_data_frame.columns.get_loc(date_col) + 1
+        worksheet = writer.sheets["Sheet1"]
+        date_col_letter = get_column_letter(date_col_index)
+        worksheet.column_dimensions[
+            date_col_letter].number_format = "dd/mm/yyyy"
+    print(f"Wrote {len(result_data_frame)} rows to {output_path}")
 
 
 def date_filter_converter(value):
@@ -41,6 +63,5 @@ def filter_out_non_date_rows(df, date_column):
     """Filter out rows where the date column is not a valid date."""
     df[date_column] = df[date_column].apply(date_filter_converter)
     df = df.dropna(subset=[date_column]).reset_index(drop=True)
-    df[date_column] = pd.to_datetime(df[date_column]).dt.date
+    df[date_column] = pd.to_datetime(df[date_column], dayfirst=True).dt.date
     return df
-

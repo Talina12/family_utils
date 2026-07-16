@@ -1,8 +1,11 @@
 import pandas as pd
-from utils import filter_out_non_date_rows, resolve_files
+from utils import (filter_out_non_date_rows, next_available_path,
+                   resolve_files, write_dated_excel)
 import sys
 import os
 
+
+# next task same as visa
 
 def read_sheet(sheet_name_to_read, file_path_to_read,
                result_data_frame_to_append):
@@ -29,13 +32,30 @@ def main():
         print(f"No files with pattern '{pattern}' "
               f"found in the directory: {file_directory}")
         return
+
     result_data_frame = pd.DataFrame()
     for filepath in files:
         result_data_frame = read_sheet("עסקאות במועד החיוב", filepath,
                                        result_data_frame)
         result_data_frame = read_sheet('עסקאות חו"ל ומט"ח', filepath,
                                        result_data_frame)
-    print(result_data_frame)
+    result_date_col = result_data_frame.columns[0]
+    result_data_frame = result_data_frame.sort_values(
+        by=result_date_col).reset_index(drop=True)
+
+    billing_col_index = result_data_frame.columns.get_loc("תאריך חיוב") + 1
+    for offset, column_name in enumerate(
+        ["категория", "контрагент"]
+    ):
+        result_data_frame.insert(
+            billing_col_index + offset, column_name, None
+        )
+
+    output_path = next_available_path(
+        f"{file_directory}/combined_max_charges.xlsx")
+
+    write_dated_excel(result_data_frame, output_path, result_date_col)
+
 
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
