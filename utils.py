@@ -51,6 +51,7 @@ def date_filter_converter(value):
         r'^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$',  # MM/DD/YYYY or DD/MM/YYYY
         r'^\d{4}[/-]\d{1,2}[/-]\d{1,2}$',    # YYYY/MM/DD
         r'^\d{1,2}-\w{3}-\d{2,4}$',          # DD-MMM-YYYY
+        r'^\d{1,2}\.\d{1,2}\.\d{2,4}$',      # DD.MM.YYYY or DD.MM.YY
     ]
 
     if any(re.match(pattern, str_val) for pattern in date_patterns):
