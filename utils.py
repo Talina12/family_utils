@@ -25,6 +25,28 @@ def next_available_path(path):
     return f"{root}({n}){ext}"
 
 
+def find_header_row(filepath, header_cell_value, usecols=None, search_rows=20):
+    """Find the row index (0-based) containing header_cell_value in any cell,
+    so it can be passed as the `header` argument to pd.read_excel."""
+    preview_df = pd.read_excel(
+        filepath, usecols=usecols, header=None, nrows=search_rows
+    )
+    matches = preview_df[
+        preview_df.apply(
+            lambda row: (
+                row.astype(str).str.strip().eq(header_cell_value).any()
+            ),
+            axis=1,
+        )
+    ]
+    if matches.empty:
+        raise ValueError(
+            f"Could not find header row containing '{header_cell_value}' "
+            f"in the first {search_rows} rows of {filepath}"
+        )
+    return matches.index[0]
+
+
 def write_dated_excel(result_data_frame, output_path, date_col):
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
         result_data_frame.to_excel(writer, index=False)

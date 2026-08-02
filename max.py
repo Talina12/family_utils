@@ -1,4 +1,5 @@
 import pandas as pd
+from categories import get_category_store
 from utils import (filter_out_non_date_rows, next_available_path,
                    resolve_files, write_dated_excel)
 import sys
@@ -44,12 +45,13 @@ def main():
         by=result_date_col).reset_index(drop=True)
 
     billing_col_index = result_data_frame.columns.get_loc("תאריך חיוב") + 1
-    for offset, column_name in enumerate(
-        ["категория", "контрагент"]
-    ):
-        result_data_frame.insert(
-            billing_col_index + offset, column_name, None
-        )
+    category_store = get_category_store()
+    categories = result_data_frame["שם בית העסק"].apply(
+        category_store.categorize)
+    contragents = result_data_frame["שם בית העסק"].apply(
+        category_store.contragent)
+    result_data_frame.insert(billing_col_index, "категория", categories)
+    result_data_frame.insert(billing_col_index + 1, "контрагент", contragents)
 
     output_path = next_available_path(
         f"{file_directory}/combined_max_charges.xlsx")

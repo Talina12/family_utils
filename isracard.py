@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import sys
+from categories import get_category_store
 from utils import (
     filter_out_non_date_rows,
     next_available_path,
@@ -8,8 +9,7 @@ from utils import (
     write_dated_excel,
 )
 
-# next task: add list of existing categories and contragents.
-#           recognize multiple payments and refer to billing day of the
+# next task: recognize multiple payments and refer to billing day of the
 #           document. remove ענף column from result
 
 
@@ -24,7 +24,7 @@ def main():
     result_data_frame = pd.DataFrame()
     for filepath in files:
         file_df = pd.read_excel(
-            filepath, usecols="A:H", header=9
+            filepath, usecols="A:H", header=11
         )
         date_col = file_df.columns[0]
         file_df = filter_out_non_date_rows(file_df, date_col)
@@ -39,10 +39,13 @@ def main():
         by=result_date_col).reset_index(drop=True)
 
     billing_col_index = result_data_frame.columns.get_loc("מטבע חיוב") + 1
-    for offset, column_name in enumerate(["категория", "контрагент"]):
-        result_data_frame.insert(
-            billing_col_index + offset, column_name, None
-        )
+    category_store = get_category_store()
+    categories = result_data_frame["שם בית עסק"].apply(
+        category_store.categorize)
+    contragents = result_data_frame["שם בית עסק"].apply(
+        category_store.contragent)
+    result_data_frame.insert(billing_col_index, "категория", categories)
+    result_data_frame.insert(billing_col_index + 1, "контрагент", contragents)
 
     output_path = next_available_path(
         f"{file_directory}/combined_isracard_charges.xlsx")
