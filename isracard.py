@@ -4,6 +4,7 @@ import sys
 from categories import get_category_store
 from utils import (
     filter_out_non_date_rows,
+    find_header_row,
     next_available_path,
     resolve_files,
     write_dated_excel,
@@ -23,8 +24,15 @@ def main():
 
     result_data_frame = pd.DataFrame()
     for filepath in files:
+        # The sections above "עסקאות למועד חיוב" vary between statements
+        # (e.g. a narrower "עסקאות שטרם נקלטו" table), so locate the
+        # first header row that has the billing columns instead of assuming
+        # a fixed row number.
+        header_row = find_header_row(filepath, "סכום חיוב", usecols="A:H")
         file_df = pd.read_excel(
-            filepath, usecols="A:H", header=11
+            filepath, usecols="A:H", header=header_row,
+            # Voucher numbers are IDs, not amounts: keep the leading zeros.
+            dtype={"מס' שובר": str},
         )
         date_col = file_df.columns[0]
         file_df = filter_out_non_date_rows(file_df, date_col)
